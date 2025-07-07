@@ -65,7 +65,7 @@ const Signup = () => {
                     <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#aaa" />
                 </Pressable>
             </View>
-            <Pressable onPress={() => router.replace("/")}>
+            <Pressable onPress={() => router.replace("/login")}>
                 <Text style={styles.loginLink}>Already have an account? Click here to log in.</Text>
             </Pressable>
             <Button color="#fff" style={styles.signupButton} onPressOut={signUpWithEmail}>
