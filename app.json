@@ -16,7 +16,8 @@
         "foregroundImage": "",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.habittracker"
     },
     "web": {
       "bundler": "metro",
