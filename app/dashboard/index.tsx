@@ -7,7 +7,9 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     FlatList,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
     Pressable,
     SafeAreaView,
     StyleSheet,
@@ -15,12 +17,9 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
-const mockTasks = [
-    { id: "1", name: "exercise", userId: "user1" },
-    { id: "2", name: "Meditate", userId: "user1" },
-    { id: "3", name: "Read", userId: "user1" },
-];
+const TASK_HEIGHT = 72;
 
 const Home = () => {
     // Modal state
@@ -31,11 +30,12 @@ const Home = () => {
     const showModal = () => setVisible(true);
     const hideModal = () => setVisible(false);
 
-    const [tasks, setTasks] = useState(mockTasks);
+    const [tasks, setTasks] = useState<Task[]>();
     const [user, setUser] = useState<User | null>(null);
 
     const router = useRouter();
 
+    // Add a task
     const addTask = async () => {
         const trimmed = newTaskTitle.trim();
         if (trimmed === "") return;
@@ -56,30 +56,57 @@ const Home = () => {
             return;
         }
 
-        setTasks((prev) => [data, ...prev]);
+        setTasks((prev) => [...(prev ?? []), data]);
         setNewTaskTitle("");
         hideModal();
     };
 
     const renderTask = ({ item }: { item: Task }) => {
+        const handleDelete = async () => {
+            const { error } = await supabase.from("habits").delete().eq("id", item.id);
+            if (error) {
+                console.error("Error deleting task:", error);
+                return;
+            }
+
+            setTasks((prev) => prev?.filter((task) => task.id !== item.id));
+        };
+
+        const renderRightActions = () => {
+            return (
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+                    <Text style={styles.deleteText}>Delete</Text>
+                </TouchableOpacity>
+            );
+        };
+
         return (
-            <TouchableOpacity
-                style={styles.task}
-                onPress={() =>
-                    router.push({
-                        pathname: "/task/[id]",
-                        params: { id: item.id },
-                    })
-                }
+            <Swipeable
+                renderRightActions={renderRightActions}
+                rightThreshold={TASK_HEIGHT / 2}
+                overshootRight={false}
             >
-                <View style={styles.taskTextWrapper}>
-                    <Text style={styles.taskText}>{item.name}</Text>
-                    <ChevronRight size={24} color="#CCC" />
+                <View style={styles.taskRow}>
+                    <TouchableOpacity
+                        style={styles.task}
+                        onPress={() =>
+                            router.push({
+                                pathname: "/task/[id]",
+                                params: { id: item.id },
+                            })
+                        }
+                    >
+                        <View style={styles.taskTextWrapper}>
+                            <Text style={styles.taskText}>{item.name}</Text>
+                            <ChevronRight size={24} color="#CCC" />
+                        </View>
+                    </TouchableOpacity>
                 </View>
-            </TouchableOpacity>
+            </Swipeable>
         );
     };
 
+    // Get the current user info
     useEffect(() => {
         const fetchUser = async () => {
             const u = await getUser();
@@ -92,6 +119,7 @@ const Home = () => {
         fetchUser();
     }, []);
 
+    // Get users tasks
     useEffect(() => {
         const fetchTasks = async () => {
             if (!user) return;
@@ -124,22 +152,29 @@ const Home = () => {
                 <Text style={styles.addButtonText}>+</Text>
             </TouchableOpacity>
             <Modal visible={visible} onRequestClose={hideModal} animationType="fade" transparent>
-                <Pressable style={styles.backdrop} onPress={hideModal} />
-                <View style={styles.modalMain}>
-                    <Text style={styles.modalTitle}>New Task</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="e.g. Gym"
-                        placeholderTextColor="#ccc"
-                        value={newTaskTitle}
-                        onChangeText={setNewTaskTitle}
-                    />
-                    <TouchableOpacity style={styles.submitButton} onPress={addTask}>
-                        <Text style={styles.submitButtonText}>Add Task</Text>
-                    </TouchableOpacity>
-                </View>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.keyboardAvoiding}
+                >
+                    <View style={styles.modalContainer}>
+                        <Pressable style={styles.backdrop} onPress={hideModal} />
+                        <View style={styles.modalMain}>
+                            <Text style={styles.modalTitle}>New Task</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="e.g. Gym"
+                                placeholderTextColor="#ccc"
+                                value={newTaskTitle}
+                                onChangeText={setNewTaskTitle}
+                                autoFocus
+                            />
+                            <TouchableOpacity style={styles.submitButton} onPress={addTask}>
+                                <Text style={styles.submitButtonText}>Add Task</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
             </Modal>
-            {/*<Button onPress={signOut}>Sign out</Button>*/}
         </SafeAreaView>
     );
 };
@@ -156,6 +191,8 @@ const styles = StyleSheet.create({
         padding: 18,
         borderRadius: 12,
         marginBottom: 8,
+        height: TASK_HEIGHT,
+        justifyContent: "center",
     },
     taskText: {
         fontSize: 16,
@@ -169,6 +206,13 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+    },
+    taskRow: {
+        backgroundColor: "#E6F0FA",
+        borderRadius: 12,
+        height: TASK_HEIGHT,
+        marginBottom: 8,
+        overflow: "hidden",
     },
     addButton: {
         position: "absolute",
@@ -229,6 +273,27 @@ const styles = StyleSheet.create({
     },
     submitButtonText: {
         color: "#fff",
+        fontWeight: "600",
+        fontSize: 16,
+    },
+    keyboardAvoiding: {
+        flex: 1,
+        justifyContent: "flex-end",
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: "flex-end",
+    },
+    deleteButton: {
+        backgroundColor: "#FF6B6B",
+        justifyContent: "center",
+        alignItems: "flex-end",
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        height: TASK_HEIGHT,
+    },
+    deleteText: {
+        color: "white",
         fontWeight: "600",
         fontSize: 16,
     },
