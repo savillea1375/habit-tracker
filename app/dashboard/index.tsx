@@ -1,9 +1,10 @@
-import ChevronRight from "@/components/ChevronRight";
+import TaskItem from "@/components/TaskItem";
+import { Colors } from "@/constants/Colors";
 import { getUser } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { Task, User } from "@/types";
 import { Text } from "@react-navigation/elements";
-import { useRouter } from "expo-router";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import {
     FlatList,
@@ -11,13 +12,13 @@ import {
     Modal,
     Platform,
     Pressable,
-    SafeAreaView,
     StyleSheet,
     TextInput,
     TouchableOpacity,
+    useColorScheme,
     View,
 } from "react-native";
-import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const TASK_HEIGHT = 72;
 
@@ -32,8 +33,6 @@ const Home = () => {
 
     const [tasks, setTasks] = useState<Task[]>();
     const [user, setUser] = useState<User | null>(null);
-
-    const router = useRouter();
 
     // Add a task
     const addTask = async () => {
@@ -61,49 +60,13 @@ const Home = () => {
         hideModal();
     };
 
-    const renderTask = ({ item }: { item: Task }) => {
-        const handleDelete = async () => {
-            const { error } = await supabase.from("habits").delete().eq("id", item.id);
-            if (error) {
-                console.error("Error deleting task:", error);
-                return;
-            }
+    const colorScheme = useColorScheme();
+    const themeBackgroundColor =
+        colorScheme === "dark" ? Colors.dark.background : Colors.light.background;
+    const themeTextColor = colorScheme === "dark" ? Colors.dark.text : Colors.light.text;
 
-            setTasks((prev) => prev?.filter((task) => task.id !== item.id));
-        };
-
-        const renderRightActions = () => {
-            return (
-                <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                    <Text style={styles.deleteText}>Delete</Text>
-                </TouchableOpacity>
-            );
-        };
-
-        return (
-            <Swipeable
-                renderRightActions={renderRightActions}
-                rightThreshold={TASK_HEIGHT / 2}
-                overshootRight={false}
-            >
-                <View style={styles.taskRow}>
-                    <TouchableOpacity
-                        style={styles.task}
-                        onPress={() =>
-                            router.push({
-                                pathname: "/task/[id]",
-                                params: { id: item.id },
-                            })
-                        }
-                    >
-                        <View style={styles.taskTextWrapper}>
-                            <Text style={styles.taskText}>{item.name}</Text>
-                            <ChevronRight size={24} color="#CCC" />
-                        </View>
-                    </TouchableOpacity>
-                </View>
-            </Swipeable>
-        );
+    const deleteTask = (id: string) => {
+        setTasks((prev) => prev?.filter((task) => task.id !== id));
     };
 
     // Get the current user info
@@ -140,12 +103,15 @@ const Home = () => {
         fetchTasks();
     }, [user]);
 
+    const todaysDate = format(new Date(), "MMMM do");
+
     return (
-        <SafeAreaView style={styles.mainContainer}>
+        <SafeAreaView style={[styles.mainContainer, { backgroundColor: themeBackgroundColor }]}>
+            <Text style={[styles.header, { color: themeTextColor }]}>{todaysDate}</Text>
             <FlatList
                 data={tasks}
                 keyExtractor={(item) => item.id}
-                renderItem={renderTask}
+                renderItem={({ item }) => <TaskItem item={item} onDelete={deleteTask} />}
                 contentContainerStyle={{ paddingBottom: 80 }}
             />
             <TouchableOpacity style={styles.addButton} onPress={showModal}>
@@ -168,8 +134,8 @@ const Home = () => {
                                 onChangeText={setNewTaskTitle}
                                 autoFocus
                             />
-                            <TouchableOpacity style={styles.submitButton} onPress={addTask}>
-                                <Text style={styles.submitButtonText}>Add Task</Text>
+                            <TouchableOpacity style={styles.addTaskbutton} onPress={addTask}>
+                                <Text style={styles.addTaskButtonText}>Add Task</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -181,13 +147,18 @@ const Home = () => {
 
 const styles = StyleSheet.create({
     mainContainer: {
-        height: "100%",
-        width: "100%",
+        flex: 1,
         justifyContent: "center",
         alignContent: "center",
+        paddingHorizontal: 12,
+    },
+    header: {
+        fontSize: 38,
+        fontWeight: "600",
+        marginBottom: 12,
     },
     task: {
-        backgroundColor: "#E6F0FA",
+        backgroundColor: Colors.primary,
         padding: 18,
         borderRadius: 12,
         marginBottom: 8,
@@ -197,10 +168,7 @@ const styles = StyleSheet.create({
     taskText: {
         fontSize: 16,
         fontWeight: "500",
-    },
-    chevron: {
-        fontSize: 24,
-        color: "#999",
+        color: "#000",
     },
     taskTextWrapper: {
         flexDirection: "row",
@@ -208,7 +176,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     taskRow: {
-        backgroundColor: "#E6F0FA",
+        backgroundColor: Colors.primary,
         borderRadius: 12,
         height: TASK_HEIGHT,
         marginBottom: 8,
@@ -218,7 +186,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 30,
         right: 30,
-        backgroundColor: "#ACCAEB",
+        backgroundColor: Colors.primary,
         width: 60,
         height: 60,
         borderRadius: 30,
@@ -230,7 +198,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     addButtonText: {
-        color: "#fff",
+        color: "#000",
         fontSize: 36,
         lineHeight: 36,
         textAlign: "center",
@@ -265,13 +233,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 16,
     },
-    submitButton: {
-        backgroundColor: "#ACCAEB",
+    addTaskbutton: {
+        backgroundColor: Colors.primary,
         paddingVertical: 12,
         borderRadius: 8,
         alignItems: "center",
     },
-    submitButtonText: {
+    addTaskButtonText: {
         color: "#fff",
         fontWeight: "600",
         fontSize: 16,

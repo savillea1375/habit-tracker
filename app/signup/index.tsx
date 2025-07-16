@@ -1,9 +1,10 @@
+import { Colors } from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "@react-navigation/elements";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Signup = () => {
@@ -34,10 +35,27 @@ const Signup = () => {
         setLoading(false);
     }
 
+    const colorScheme = useColorScheme();
+
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView
+            style={[
+                styles.container,
+                {
+                    backgroundColor:
+                        colorScheme === "dark" ? Colors.dark.background : Colors.light.background,
+                },
+            ]}
+        >
             <View style={styles.headerContainer}>
-                <Text style={styles.header}>Sign Up</Text>
+                <Text
+                    style={[
+                        styles.header,
+                        { color: colorScheme === "dark" ? Colors.dark.text : Colors.light.text },
+                    ]}
+                >
+                    Sign Up
+                </Text>
                 <Text style={styles.subheader}>
                     Create an account to start tracking your habits
                 </Text>
@@ -66,7 +84,14 @@ const Signup = () => {
                 </Pressable>
             </View>
             <Pressable onPress={() => router.replace("/login")}>
-                <Text style={styles.loginLink}>Already have an account? Click here to log in.</Text>
+                <Text
+                    style={[
+                        styles.loginLink,
+                        { color: colorScheme === "dark" ? Colors.dark.text : Colors.light.text },
+                    ]}
+                >
+                    Already have an account? Click here to log in.
+                </Text>
             </Pressable>
             <Button color="#fff" style={styles.signupButton} onPressOut={signUpWithEmail}>
                 Login
@@ -78,7 +103,6 @@ const Signup = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#fff",
         alignItems: "center",
         paddingVertical: 200,
     },
@@ -128,7 +152,7 @@ const styles = StyleSheet.create({
         transform: [{ translateY: -11 }],
     },
     signupButton: {
-        backgroundColor: "lightblue",
+        backgroundColor: Colors.primary,
         width: 150,
         borderRadius: 12,
     },

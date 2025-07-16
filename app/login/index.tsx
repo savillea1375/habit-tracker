@@ -1,9 +1,10 @@
+import { Colors } from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "@react-navigation/elements";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Login = () => {
@@ -31,10 +32,27 @@ const Login = () => {
         setLoading(false);
     }
 
+    const colorScheme = useColorScheme();
+
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView
+            style={[
+                styles.container,
+                {
+                    backgroundColor:
+                        colorScheme === "dark" ? Colors.dark.background : Colors.light.background,
+                },
+            ]}
+        >
             <View style={styles.headerContainer}>
-                <Text style={styles.header}>Login</Text>
+                <Text
+                    style={[
+                        styles.header,
+                        { color: colorScheme === "dark" ? Colors.dark.text : Colors.light.text },
+                    ]}
+                >
+                    Login
+                </Text>
                 <Text style={styles.subheader}>Sign in to view your habits</Text>
             </View>
             <TextInput
@@ -61,7 +79,14 @@ const Login = () => {
                 </Pressable>
             </View>
             <Pressable onPress={() => router.replace("/signup")}>
-                <Text style={styles.signupLink}>Don't have an account? Click here to sign up.</Text>
+                <Text
+                    style={[
+                        styles.signupLink,
+                        { color: colorScheme === "dark" ? Colors.dark.text : Colors.light.text },
+                    ]}
+                >
+                    Don't have an account? Click here to sign up.
+                </Text>
             </Pressable>
             <Button
                 color="#fff"
@@ -128,7 +153,7 @@ const styles = StyleSheet.create({
         transform: [{ translateY: -11 }],
     },
     loginButton: {
-        backgroundColor: "lightblue",
+        backgroundColor: Colors.primary,
         width: 150,
         borderRadius: 12,
     },
