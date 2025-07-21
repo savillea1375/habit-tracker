@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { Text } from "@react-navigation/elements";
 import {
     KeyboardAvoidingView,
@@ -6,6 +7,7 @@ import {
     Platform,
     StyleSheet,
     TouchableOpacity,
+    useColorScheme,
     View,
 } from "react-native";
 import { Pressable, TextInput } from "react-native-gesture-handler";
@@ -23,6 +25,10 @@ const NewTaskModel = ({
     onChangeText: (text: string) => void;
     onSubmit: () => void;
 }) => {
+    const colorScheme = useColorScheme();
+    const modalBackground = colorScheme === "light" ? "#fff" : "#1C1F20";
+    const themeTextColor = useThemeColor({}, "text");
+
     return (
         <Modal visible={visible} onRequestClose={onClose} animationType="fade" transparent>
             <KeyboardAvoidingView
@@ -31,8 +37,8 @@ const NewTaskModel = ({
             >
                 <View style={styles.modalContainer}>
                     <Pressable style={styles.backdrop} onPress={onClose} />
-                    <View style={styles.modalMain}>
-                        <Text style={styles.modalTitle}>New Task</Text>
+                    <View style={[styles.modalMain, { backgroundColor: modalBackground }]}>
+                        <Text style={[styles.modalTitle, { color: themeTextColor }]}>New Task</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="e.g. Gym"
@@ -61,7 +67,6 @@ const styles = StyleSheet.create({
         bottom: 0,
         width: "100%",
         padding: 24,
-        backgroundColor: "#fff",
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         shadowColor: "#000",
