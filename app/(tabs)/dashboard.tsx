@@ -1,3 +1,4 @@
+import NewTaskModel from "@/components/NewTaskModal";
 import TaskItem from "@/components/TaskItem";
 import { Colors } from "@/constants/Colors";
 import { getUser } from "@/lib/auth";
@@ -6,18 +7,7 @@ import { Task, User } from "@/types";
 import { Text } from "@react-navigation/elements";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import {
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    useColorScheme,
-    View,
-} from "react-native";
+import { FlatList, StyleSheet, TouchableOpacity, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TASK_HEIGHT = 72;
@@ -107,40 +97,25 @@ const Home = () => {
 
     return (
         <SafeAreaView style={[styles.mainContainer, { backgroundColor: themeBackgroundColor }]}>
-            <Text style={[styles.header, { color: themeTextColor }]}>{todaysDate}</Text>
+            <View style={styles.headerContainer}>
+                <Text style={[styles.header, { color: themeTextColor }]}>{todaysDate}</Text>
+                <TouchableOpacity style={styles.addButton} onPress={showModal}>
+                    <Text style={styles.addButtonText}>+</Text>
+                </TouchableOpacity>
+            </View>
             <FlatList
                 data={tasks}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <TaskItem item={item} onDelete={deleteTask} />}
                 contentContainerStyle={{ paddingBottom: 80 }}
             />
-            <TouchableOpacity style={styles.addButton} onPress={showModal}>
-                <Text style={styles.addButtonText}>+</Text>
-            </TouchableOpacity>
-            <Modal visible={visible} onRequestClose={hideModal} animationType="fade" transparent>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={styles.keyboardAvoiding}
-                >
-                    <View style={styles.modalContainer}>
-                        <Pressable style={styles.backdrop} onPress={hideModal} />
-                        <View style={styles.modalMain}>
-                            <Text style={styles.modalTitle}>New Task</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="e.g. Gym"
-                                placeholderTextColor="#ccc"
-                                value={newTaskTitle}
-                                onChangeText={setNewTaskTitle}
-                                autoFocus
-                            />
-                            <TouchableOpacity style={styles.addTaskbutton} onPress={addTask}>
-                                <Text style={styles.addTaskButtonText}>Add Task</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </KeyboardAvoidingView>
-            </Modal>
+            <NewTaskModel
+                visible={visible}
+                onClose={hideModal}
+                value={newTaskTitle}
+                onChangeText={setNewTaskTitle}
+                onSubmit={addTask}
+            />
         </SafeAreaView>
     );
 };
@@ -157,100 +132,22 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         marginBottom: 12,
     },
-    task: {
-        backgroundColor: Colors.primary,
-        padding: 18,
-        borderRadius: 12,
-        marginBottom: 8,
-        height: TASK_HEIGHT,
-        justifyContent: "center",
-    },
-    taskText: {
-        fontSize: 16,
-        fontWeight: "500",
-        color: "#000",
-    },
-    taskTextWrapper: {
+    headerContainer: {
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "center",
-    },
-    taskRow: {
-        backgroundColor: Colors.primary,
-        borderRadius: 12,
-        height: TASK_HEIGHT,
-        marginBottom: 8,
-        overflow: "hidden",
     },
     addButton: {
-        position: "absolute",
-        bottom: 30,
-        right: 30,
-        backgroundColor: Colors.primary,
         width: 60,
         height: 60,
         borderRadius: 30,
         alignItems: "center",
         justifyContent: "center",
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 2,
     },
     addButtonText: {
-        color: "#000",
+        color: Colors.primary,
         fontSize: 36,
         lineHeight: 36,
         textAlign: "center",
-    },
-    backdrop: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.3)",
-    },
-    modalMain: {
-        position: "absolute",
-        bottom: 0,
-        width: "100%",
-        padding: 24,
-        backgroundColor: "#fff",
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 10,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: "600",
-        marginBottom: 12,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        marginBottom: 16,
-    },
-    addTaskbutton: {
-        backgroundColor: Colors.primary,
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: "center",
-    },
-    addTaskButtonText: {
-        color: "#fff",
-        fontWeight: "600",
-        fontSize: 16,
-    },
-    keyboardAvoiding: {
-        flex: 1,
-        justifyContent: "flex-end",
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: "flex-end",
     },
     deleteButton: {
         backgroundColor: "#FF6B6B",

@@ -6,13 +6,17 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, useColorScheme, View } from "react-native";
 
-const Task = () => {
+export default function Task() {
     const { id, name } = useLocalSearchParams();
 
     const [task, setTask] = useState<TaskType | null>(null);
+    const [completionCount, setCompletionCount] = useState<number>(0);
     const [loading, setLoading] = useState(false);
 
     const colorScheme = useColorScheme();
+    const backgroundTheme =
+        colorScheme === "dark" ? Colors.dark.background : Colors.light.background;
+    const textTheme = colorScheme === "dark" ? Colors.dark.text : Colors.light.text;
 
     useEffect(() => {
         if (!id) return;
@@ -29,7 +33,21 @@ const Task = () => {
             setLoading(false);
         };
 
+        const fetchCompletionCount = async () => {
+            const { count, error } = await supabase
+                .from("habit_completions")
+                .select("*", { count: "exact", head: true })
+                .eq("habit_id", id);
+
+            if (error) {
+                console.error("Error fetching completion count:", error);
+            } else {
+                setCompletionCount(count ?? 0);
+            }
+        };
+
         fetchTask();
+        fetchCompletionCount();
     }, [id]);
 
     return (
@@ -37,8 +55,7 @@ const Task = () => {
             style={[
                 styles.mainContainer,
                 {
-                    backgroundColor:
-                        colorScheme === "dark" ? Colors.dark.background : Colors.light.background,
+                    backgroundColor: backgroundTheme,
                 },
             ]}
         >
@@ -46,16 +63,18 @@ const Task = () => {
                 style={[
                     styles.taskName,
                     {
-                        color: colorScheme === "dark" ? Colors.dark.text : Colors.light.text,
+                        color: textTheme,
                     },
                 ]}
             >
                 {name}
             </Text>
+            <Text style={{ color: textTheme }}>Completed: {completionCount}</Text>
+            <Text style={{ color: textTheme }}>Missed: {}</Text>
             <GridView />
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     mainContainer: {
@@ -74,5 +93,3 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 });
-
-export default Task;

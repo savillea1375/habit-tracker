@@ -16,7 +16,7 @@ const getPastSixMonthsDates = () => {
     return eachDayOfInterval({ start: startDate, end: endDate });
 };
 
-const GridView = () => {
+export default function GridView() {
     const colorScheme = useColorScheme();
 
     const dates = getPastSixMonthsDates();
@@ -109,7 +109,7 @@ const GridView = () => {
             </View>
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     mainContainer: {
@@ -142,5 +142,3 @@ const styles = StyleSheet.create({
         color: "#666",
     },
 });
-
-export default GridView;

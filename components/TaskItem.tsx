@@ -3,14 +3,19 @@ import { supabase } from "@/lib/supabase";
 import { Task } from "@/types";
 import { Text } from "@react-navigation/elements";
 import { useRouter } from "expo-router";
-import { StyleSheet, TouchableOpacity } from "react-native";
-import Swipeable from "react-native-gesture-handler/lib/typescript/components/ReanimatedSwipeable";
-import { View } from "react-native-reanimated/lib/typescript/Animated";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import ChevronRight from "./ChevronRight";
 
 const TASK_HEIGHT = 72;
 
-const TaskItem = ({ item, onDelete }: { item: Task; onDelete: (id: string) => void }) => {
+export default function TaskItem({
+    item,
+    onDelete,
+}: {
+    item: Task;
+    onDelete: (id: string) => void;
+}) {
     const router = useRouter();
 
     const handleDelete = async () => {
@@ -51,7 +56,7 @@ const TaskItem = ({ item, onDelete }: { item: Task; onDelete: (id: string) => vo
             </View>
         </Swipeable>
     );
-};
+}
 
 const styles = StyleSheet.create({
     task: {
@@ -93,5 +98,3 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
-
-export default TaskItem;

@@ -9,7 +9,7 @@ export default function Index() {
                 data: { session },
             } = await supabase.auth.getSession();
             if (session) {
-                router.replace("/dashboard");
+                router.replace("/(tabs)/dashboard");
             } else {
                 router.replace("/login");
             }
