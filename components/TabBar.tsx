@@ -7,7 +7,6 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-na
 import TabBarButton from "./TabBarButton";
 
 export default function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-    const textColor = useThemeColor({}, "text");
     const backgroundThemeColor = useThemeColor({}, "background");
 
     const [dimensions, setDimensions] = useState({ height: 20, width: 100 });

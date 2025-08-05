@@ -52,12 +52,7 @@ export default function GridView() {
     const svgHeight = numRows * (cellSize + cellPadding);
 
     return (
-        <View
-            style={[
-                styles.mainContainer,
-                { backgroundColor: colorScheme === "dark" ? "#2c2e2f" : "#fff" },
-            ]}
-        >
+        <View style={styles.mainContainer}>
             <View style={styles.monthLabelsContainer}>
                 {monthLabels.map((label, index) => (
                     <Text
@@ -113,13 +108,7 @@ export default function GridView() {
 
 const styles = StyleSheet.create({
     mainContainer: {
-        padding: 12,
         borderRadius: 12,
-        elevation: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
     },
     dayLabelsContainer: {
         justifyContent: "space-between",
@@ -135,7 +124,6 @@ const styles = StyleSheet.create({
         height: 20,
         marginLeft: 24,
         position: "relative",
-        backgroundColor: "grey",
     },
     monthLabel: {
         fontSize: 10,

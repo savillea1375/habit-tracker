@@ -1,15 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Text } from "@react-navigation/elements";
-import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    StyleSheet,
-    TouchableOpacity,
-    useColorScheme,
-    View,
-} from "react-native";
+import { Modal, StyleSheet, TouchableOpacity, useColorScheme, View } from "react-native";
 import { Pressable, TextInput } from "react-native-gesture-handler";
 
 const NewTaskModel = ({
@@ -31,28 +23,23 @@ const NewTaskModel = ({
 
     return (
         <Modal visible={visible} onRequestClose={onClose} animationType="fade" transparent>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardAvoiding}
-            >
-                <View style={styles.modalContainer}>
-                    <Pressable style={styles.backdrop} onPress={onClose} />
-                    <View style={[styles.modalMain, { backgroundColor: modalBackground }]}>
-                        <Text style={[styles.modalTitle, { color: themeTextColor }]}>New Task</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="e.g. Gym"
-                            placeholderTextColor="#ccc"
-                            value={value}
-                            onChangeText={onChangeText}
-                            autoFocus
-                        />
-                        <TouchableOpacity style={styles.addTaskbutton} onPress={onSubmit}>
-                            <Text style={styles.addTaskButtonText}>Add Task</Text>
-                        </TouchableOpacity>
-                    </View>
+            <View style={styles.modalContainer}>
+                <Pressable style={styles.backdrop} onPress={onClose} />
+                <View style={[styles.modalContent, { backgroundColor: modalBackground }]}>
+                    <Text style={[styles.modalTitle, { color: themeTextColor }]}>New Task</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Gym"
+                        placeholderTextColor="#ccc"
+                        value={value}
+                        onChangeText={onChangeText}
+                        autoFocus
+                    />
+                    <TouchableOpacity style={styles.addTaskbutton} onPress={onSubmit}>
+                        <Text style={styles.addTaskButtonText}>Add Task</Text>
+                    </TouchableOpacity>
                 </View>
-            </KeyboardAvoidingView>
+            </View>
         </Modal>
     );
 };
@@ -62,9 +49,10 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.3)",
     },
-    modalMain: {
+    modalContent: {
         position: "absolute",
         bottom: 0,
+        height: "60%",
         width: "100%",
         padding: 24,
         borderTopLeftRadius: 24,
@@ -97,10 +85,6 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontWeight: "600",
         fontSize: 16,
-    },
-    keyboardAvoiding: {
-        flex: 1,
-        justifyContent: "flex-end",
     },
     modalContainer: {
         flex: 1,

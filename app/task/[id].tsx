@@ -2,6 +2,7 @@ import GridView from "@/components/GridView";
 import { Colors } from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import { Task as TaskType } from "@/types";
+import Checkbox from "expo-checkbox";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, useColorScheme, View } from "react-native";
@@ -12,6 +13,7 @@ export default function Task() {
     const [task, setTask] = useState<TaskType | null>(null);
     const [completionCount, setCompletionCount] = useState<number>(0);
     const [loading, setLoading] = useState(false);
+    const [isChecked, setIsChecked] = useState(false);
 
     const colorScheme = useColorScheme();
     const backgroundTheme =
@@ -59,16 +61,19 @@ export default function Task() {
                 },
             ]}
         >
-            <Text
-                style={[
-                    styles.taskName,
-                    {
-                        color: textTheme,
-                    },
-                ]}
-            >
-                {name}
-            </Text>
+            <View style={styles.headerContainer}>
+                <Text
+                    style={[
+                        styles.taskName,
+                        {
+                            color: textTheme,
+                        },
+                    ]}
+                >
+                    {name}
+                </Text>
+                <Checkbox style={styles.checkbox} value={isChecked} onValueChange={setIsChecked} />
+            </View>
             <Text style={{ color: textTheme }}>Completed: {completionCount}</Text>
             <Text style={{ color: textTheme }}>Missed: {}</Text>
             <GridView />
@@ -82,14 +87,19 @@ const styles = StyleSheet.create({
         paddingTop: 100,
         paddingHorizontal: 12,
     },
+    headerContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
     taskName: {
         color: "black",
         fontSize: 42,
         fontWeight: "600",
         marginBottom: 12,
     },
-    center: {
-        justifyContent: "center",
-        alignItems: "center",
+    checkbox: {
+        margin: 8,
+        padding: 12,
     },
 });
