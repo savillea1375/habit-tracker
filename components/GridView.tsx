@@ -94,14 +94,14 @@ export default function GridView({ habitId, createdAt, refreshTrigger }: GridVie
 
     const getCellColor = (date: Date): string => {
         const dateString = format(date, "yyyy-MM-dd");
-        const taskCreatedDate = parseISO(createdAt);
+        const taskCreatedDate = format(parseISO(createdAt), "yyyy-MM-dd");
 
         // Show blank if day before created date
-        if (date < taskCreatedDate) {
+        if (dateString < taskCreatedDate) {
             return colorScheme === "dark" ? "#2a2a2a" : "#f0f0f0";
         }
 
-        // If date is after creation, show either primary or red for completion or failure
+        // If date is after or same day as creation, show either primary or red for completion or failure
         if (completions.has(dateString)) {
             return Colors.primary;
         } else {

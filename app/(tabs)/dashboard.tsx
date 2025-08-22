@@ -91,7 +91,7 @@ const Home = () => {
         };
 
         fetchTasks();
-    }, [user]);
+    }, [user, tasks]);
 
     const todaysDate = format(new Date(), "MMMM do");
 
@@ -108,6 +108,7 @@ const Home = () => {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <TaskItem item={item} onDelete={deleteTask} />}
                 contentContainerStyle={{ paddingBottom: 80 }}
+                showsVerticalScrollIndicator={false}
             />
             <NewTaskModel
                 visible={visible}

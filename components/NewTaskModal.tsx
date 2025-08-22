@@ -28,9 +28,9 @@ const NewTaskModel = ({
                 <View style={[styles.modalContent, { backgroundColor: modalBackground }]}>
                     <Text style={[styles.modalTitle, { color: themeTextColor }]}>New Task</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { color: themeTextColor }]}
                         placeholder="e.g. Gym"
-                        placeholderTextColor="#ccc"
+                        placeholderTextColor={themeTextColor}
                         value={value}
                         onChangeText={onChangeText}
                         autoFocus
