@@ -1,17 +1,16 @@
-import GridView from "@/components/GridView";
 import { Colors } from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import { Task as TaskType } from "@/types";
-import Checkbox from "expo-checkbox";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, useColorScheme, View } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
 
 export default function Task() {
     const { id, name } = useLocalSearchParams();
 
     const [task, setTask] = useState<TaskType | null>(null);
-    const [completionCount, setCompletionCount] = useState<number>(0);
+    const [completions, setCompletions] = useState<any[]>();
     const [loading, setLoading] = useState(false);
     const [isChecked, setIsChecked] = useState(false);
 
@@ -35,22 +34,25 @@ export default function Task() {
             setLoading(false);
         };
 
-        const fetchCompletionCount = async () => {
-            const { count, error } = await supabase
+        const fetchCompletions = async () => {
+            const { data, error } = await supabase
                 .from("habit_completions")
-                .select("*", { count: "exact", head: true })
-                .eq("habit_id", id);
+                .select("*")
+                .eq("habit_id", id)
+                .order("completed_date", { ascending: false });
 
             if (error) {
                 console.error("Error fetching completion count:", error);
             } else {
-                setCompletionCount(count ?? 0);
+                setCompletions(data ?? []);
             }
         };
 
         fetchTask();
-        fetchCompletionCount();
-    }, [id]);
+        fetchCompletions();
+    });
+
+    const themeTextColor = colorScheme === "dark" ? Colors.dark.text : Colors.light.text;
 
     return (
         <View
@@ -62,21 +64,24 @@ export default function Task() {
             ]}
         >
             <View style={styles.headerContainer}>
-                <Text
-                    style={[
-                        styles.taskName,
-                        {
-                            color: textTheme,
-                        },
-                    ]}
-                >
-                    {name}
-                </Text>
-                <Checkbox style={styles.checkbox} value={isChecked} onValueChange={setIsChecked} />
+                <Text style={[styles.header, { color: themeTextColor }]}>{name}</Text>
             </View>
-            <Text style={{ color: textTheme }}>Completed: {completionCount}</Text>
-            <Text style={{ color: textTheme }}>Missed: {}</Text>
-            <GridView />
+            <Text style={{ color: textTheme }}>Completed: {completions?.length}</Text>
+            <FlatList
+                data={completions}
+                keyExtractor={(item) => String(item.id ?? item.completed_date)}
+                renderItem={({ item }) => {
+                    let formatted = item?.completed_date;
+                    return (
+                        <View>
+                            <Text style={{ color: themeTextColor }}>{formatted}</Text>
+                        </View>
+                    );
+                }}
+                ListEmptyComponent={
+                    <Text style={{ color: themeTextColor }}>No completions yet.</Text>
+                }
+            />
         </View>
     );
 }
@@ -86,6 +91,11 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingTop: 100,
         paddingHorizontal: 12,
+    },
+    header: {
+        fontSize: 38,
+        fontWeight: "600",
+        marginBottom: 12,
     },
     headerContainer: {
         flexDirection: "row",

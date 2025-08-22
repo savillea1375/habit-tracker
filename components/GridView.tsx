@@ -1,4 +1,14 @@
-import { eachDayOfInterval, startOfToday, startOfWeek, subMonths } from "date-fns";
+import { Colors } from "@/constants/Colors";
+import { supabase } from "@/lib/supabase";
+import {
+    eachDayOfInterval,
+    format,
+    parseISO,
+    startOfToday,
+    startOfWeek,
+    subMonths,
+} from "date-fns";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, useColorScheme, View } from "react-native";
 import Svg, { Rect } from "react-native-svg";
 
@@ -6,7 +16,6 @@ const numRows = 7;
 const cellSize = 12;
 const cellPadding = 2;
 const cornerRadius = 2;
-const greenHex = "#9be9a8";
 
 const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -16,12 +25,22 @@ const getPastSixMonthsDates = () => {
     return eachDayOfInterval({ start: startDate, end: endDate });
 };
 
-export default function GridView() {
+interface GridViewProps {
+    habitId: string;
+    createdAt: string;
+    refreshTrigger: number;
+    today: string;
+    todayCompleted: boolean;
+}
+
+export default function GridView({ habitId, createdAt, refreshTrigger }: GridViewProps) {
     const colorScheme = useColorScheme();
+    const [completions, setCompletions] = useState<Set<string>>(new Set());
 
     const dates = getPastSixMonthsDates();
     const weeks: Date[][] = [];
 
+    // Fill in weeks array
     let currentWeek: Date[] = [];
     for (let i = 0; i < dates.length; i++) {
         currentWeek.push(dates[i]);
@@ -51,6 +70,47 @@ export default function GridView() {
     const svgWidth = weeks.length * (cellSize + cellPadding);
     const svgHeight = numRows * (cellSize + cellPadding);
 
+    // Fetch all task completions for box filling
+    useEffect(() => {
+        fetchCompletions();
+    }, [habitId, refreshTrigger]);
+
+    const fetchCompletions = async () => {
+        const startDate = format(dates[0], "yyyy-MM-dd");
+        const endDate = format(dates[dates.length - 1], "yyyy-MM-dd");
+
+        const { data, error } = await supabase
+            .from("habit_completions")
+            .select("completed_date")
+            .eq("habit_id", habitId)
+            .gte("completed_date", startDate)
+            .lte("completed_date", endDate);
+
+        if (!error && data) {
+            const completions = new Set(data.map((item) => item.completed_date));
+            setCompletions(completions);
+        }
+    };
+
+    const getCellColor = (date: Date): string => {
+        const dateString = format(date, "yyyy-MM-dd");
+        const taskCreatedDate = parseISO(createdAt);
+
+        // Show blank if day before created date
+        if (date < taskCreatedDate) {
+            return colorScheme === "dark" ? "#2a2a2a" : "#f0f0f0";
+        }
+
+        // If date is after creation, show either primary or red for completion or failure
+        if (completions.has(dateString)) {
+            return Colors.primary;
+        } else {
+            return Colors.shared.gridFailed;
+        }
+    };
+
+    const labelColor = colorScheme === "dark" ? "#888" : "#666";
+
     return (
         <View style={styles.mainContainer}>
             <View style={styles.monthLabelsContainer}>
@@ -62,8 +122,7 @@ export default function GridView() {
                             {
                                 left: label.x,
                                 position: "absolute",
-                                width: cellSize * 3,
-                                textAlign: "left",
+                                color: labelColor,
                             },
                         ]}
                     >
@@ -74,7 +133,7 @@ export default function GridView() {
             <View style={{ flexDirection: "row" }}>
                 <View style={styles.dayLabelsContainer}>
                     {daysOfWeek.map((day, index) => (
-                        <Text key={index} style={styles.dayLabel}>
+                        <Text key={index} style={[styles.dayLabel, { color: labelColor }]}>
                             {day}
                         </Text>
                     ))}
@@ -94,7 +153,7 @@ export default function GridView() {
                                         height={cellSize}
                                         rx={cornerRadius}
                                         ry={cornerRadius}
-                                        fill={"#e0e0e0"}
+                                        fill={getCellColor(date)}
                                     />
                                 );
                             })

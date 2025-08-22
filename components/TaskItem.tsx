@@ -2,11 +2,10 @@ import { supabase } from "@/lib/supabase";
 import { Task } from "@/types";
 import { Text } from "@react-navigation/elements";
 import Checkbox from "expo-checkbox";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, TouchableWithoutFeedback, useColorScheme, View } from "react-native";
 import GridView from "./GridView";
-
-const TASK_HEIGHT = 72;
 
 export default function TaskItem({
     item,
@@ -16,6 +15,7 @@ export default function TaskItem({
     onDelete: (id: string) => void;
 }) {
     const [isChecked, setIsChecked] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     useEffect(() => {
         checkCompletion();
@@ -54,7 +54,9 @@ export default function TaskItem({
 
                 if (error) {
                     setIsChecked(false);
-                    console.log("handleCompletionToggle:", error);
+                    console.error("handleCompletionToggle:", error);
+                } else {
+                    setRefreshTrigger((prev) => prev + 1);
                 }
             } else {
                 const { error } = await supabase
@@ -65,7 +67,9 @@ export default function TaskItem({
 
                 if (error) {
                     setIsChecked(false);
-                    console.log("handleCompletionToggle:", error);
+                    console.error("handleCompletionToggle:", error);
+                } else {
+                    setRefreshTrigger((prev) => prev + 1);
                 }
             }
         } catch (error) {
@@ -83,10 +87,20 @@ export default function TaskItem({
     const themeBackgroundColor = useColorScheme() === "dark" ? "#000" : "#fff";
     const themeFontColor = useColorScheme() === "dark" ? "#fff" : "000";
 
+    const todayString = new Date().toISOString().split("T")[0];
+
+    const router = useRouter();
+
     return (
         <View style={[styles.mainContainer, { backgroundColor: themeBackgroundColor }]}>
             <TouchableWithoutFeedback
-                onLongPress={() => console.log("press")}
+                onPress={() =>
+                    router.push({
+                        pathname: "/task/[id]",
+                        params: { id: item.id, name: item.name },
+                    })
+                }
+                onLongPress={() => console.log("show menu")}
                 style={[styles.mainContainer, { backgroundColor: "#fff" }]}
             >
                 <View>
@@ -100,7 +114,13 @@ export default function TaskItem({
                             onValueChange={handleCompletionToggle}
                         />
                     </View>
-                    <GridView />
+                    <GridView
+                        habitId={item.id}
+                        createdAt={item.created_at}
+                        refreshTrigger={refreshTrigger}
+                        today={todayString}
+                        todayCompleted={isChecked}
+                    />
                 </View>
             </TouchableWithoutFeedback>
         </View>

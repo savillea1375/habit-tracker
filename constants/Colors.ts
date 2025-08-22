@@ -11,6 +11,7 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    gridBlank: "#666"
   },
   dark: {
     text: '#fff',
@@ -19,5 +20,9 @@ export const Colors = {
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    gridBlank: ""
   },
+  shared: {
+    gridFailed: "#ef4444"
+  }
 };
