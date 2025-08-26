@@ -2,14 +2,16 @@ import { Colors } from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import {
     eachDayOfInterval,
+    endOfMonth,
     format,
     parseISO,
+    startOfMonth,
     startOfToday,
-    startOfWeek,
     subMonths,
 } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, useColorScheme, View } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import Svg, { Rect } from "react-native-svg";
 
 const numRows = 7;
@@ -19,10 +21,11 @@ const cornerRadius = 2;
 
 const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
 
-const getPastSixMonthsDates = () => {
+// Returns start and end date of the past six months
+const getPastSixMonthsRange = () => {
     const endDate = startOfToday();
-    const startDate = startOfWeek(subMonths(endDate, 5), { weekStartsOn: 0 });
-    return eachDayOfInterval({ start: startDate, end: endDate });
+    const startDate = startOfMonth(subMonths(endDate, 5));
+    return { startDate, endDate };
 };
 
 interface GridViewProps {
@@ -36,61 +39,89 @@ interface GridViewProps {
 export default function GridView({ habitId, createdAt, refreshTrigger }: GridViewProps) {
     const colorScheme = useColorScheme();
     const [completions, setCompletions] = useState<Set<string>>(new Set());
+    const scrollRef = useRef<ScrollView | null>(null);
 
-    const dates = getPastSixMonthsDates();
-    const weeks: Date[][] = [];
-
-    // Fill in weeks array
-    let currentWeek: Date[] = [];
-    for (let i = 0; i < dates.length; i++) {
-        currentWeek.push(dates[i]);
-        const isEndOfWeek = dates[i].getDay() === 6 || i === dates.length - 1;
-
-        if (isEndOfWeek) {
-            weeks.push(currentWeek);
-            currentWeek = [];
-        }
-    }
-
-    const monthLabels: { name: string; x: number }[] = [];
-    let lastMonth = -1;
-
-    weeks.forEach((week, col) => {
-        const firstDay = week[0];
-        const currentMonth = firstDay.getMonth();
-
-        if (currentMonth !== lastMonth) {
-            const monthName = firstDay.toLocaleString("default", { month: "short" });
-            const x = col * (cellSize + cellPadding);
-            monthLabels.push({ name: monthName, x });
-            lastMonth = currentMonth;
-        }
-    });
-
-    const svgWidth = weeks.length * (cellSize + cellPadding);
     const svgHeight = numRows * (cellSize + cellPadding);
+
+    const { startDate: overallStart, endDate: overallEnd } = getPastSixMonthsRange();
+
+    const months: {
+        key: string;
+        label: string;
+        weeks: (Date | null)[][];
+    }[] = [];
+
+    // iterate months from start month to end month
+    const curMonth = new Date(overallStart);
+    const endCursorMonth = endOfMonth(overallEnd);
+    while (curMonth <= endCursorMonth) {
+        const monthStart = startOfMonth(curMonth);
+        const monthEnd = endOfMonth(curMonth) > overallEnd ? overallEnd : endOfMonth(curMonth);
+        const monthDates = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+        // group into weeks (columns)
+        const monthWeeks: (Date | null)[][] = [];
+        let currentWeek: (Date | null)[] = [];
+        for (let i = 0; i < monthDates.length; i++) {
+            const date = monthDates[i];
+
+            // pad first week
+            if (i === 0) {
+                for (let j = 0; j < date.getDay(); j++) {
+                    currentWeek.push(null);
+                }
+            }
+
+            currentWeek.push(date);
+
+            const isEndOfWeek = date.getDay() === 6 || i === monthDates.length - 1;
+            if (isEndOfWeek) {
+                monthWeeks.push(currentWeek);
+                currentWeek = [];
+            }
+        }
+
+        months.push({
+            key: `${curMonth.getFullYear()}-${curMonth.getMonth()}`,
+            label: monthStart.toLocaleString("default", { month: "short" }),
+            weeks: monthWeeks,
+        });
+
+        // move to next month
+        curMonth.setMonth(curMonth.getMonth() + 1);
+        curMonth.setDate(1);
+    }
 
     // Fetch all task completions for box filling
     useEffect(() => {
+        let mounted = true;
+        const fetchCompletions = async () => {
+            try {
+                const start = format(overallStart, "yyyy-MM-dd");
+                const end = format(overallEnd, "yyyy-MM-dd");
+
+                const { data, error } = await supabase
+                    .from("habit_completions")
+                    .select("completed_date")
+                    .eq("habit_id", habitId)
+                    .gte("completed_date", start)
+                    .lte("completed_date", end);
+
+                if (!mounted) return;
+                if (!error && data) {
+                    const fetched = new Set((data as any[]).map((d) => d.completed_date));
+                    setCompletions(fetched);
+                }
+            } catch (e) {
+                console.warn("GridView fetch error", e);
+            }
+        };
+
         fetchCompletions();
+        return () => {
+            mounted = false;
+        };
     }, [habitId, refreshTrigger]);
-
-    const fetchCompletions = async () => {
-        const startDate = format(dates[0], "yyyy-MM-dd");
-        const endDate = format(dates[dates.length - 1], "yyyy-MM-dd");
-
-        const { data, error } = await supabase
-            .from("habit_completions")
-            .select("completed_date")
-            .eq("habit_id", habitId)
-            .gte("completed_date", startDate)
-            .lte("completed_date", endDate);
-
-        if (!error && data) {
-            const completions = new Set(data.map((item) => item.completed_date));
-            setCompletions(completions);
-        }
-    };
 
     const getCellColor = (date: Date): string => {
         const dateString = format(date, "yyyy-MM-dd");
@@ -109,57 +140,71 @@ export default function GridView({ habitId, createdAt, refreshTrigger }: GridVie
         }
     };
 
+    const themeBackgroundColor = useColorScheme() === "dark" ? "#000" : "#fff";
     const labelColor = colorScheme === "dark" ? "#888" : "#666";
 
     return (
         <View style={styles.mainContainer}>
-            <View style={styles.monthLabelsContainer}>
-                {monthLabels.map((label, index) => (
-                    <Text
-                        key={index}
-                        style={[
-                            styles.monthLabel,
-                            {
-                                left: label.x,
-                                position: "absolute",
-                                color: labelColor,
-                            },
-                        ]}
-                    >
-                        {label.name}
-                    </Text>
-                ))}
-            </View>
             <View style={{ flexDirection: "row" }}>
-                <View style={styles.dayLabelsContainer}>
+                <View style={[styles.dayLabelsContainer, { height: cellSize * 7, paddingTop: 15 }]}>
                     {daysOfWeek.map((day, index) => (
                         <Text key={index} style={[styles.dayLabel, { color: labelColor }]}>
                             {day}
                         </Text>
                     ))}
                 </View>
-                <View style={{ width: svgWidth, height: svgHeight }}>
-                    <Svg>
-                        {weeks.map((week, col) =>
-                            week.map((date, row) => {
-                                const x = col * (cellSize + cellPadding);
-                                const y = row * (cellSize + cellPadding);
-                                return (
-                                    <Rect
-                                        key={date.toISOString()}
-                                        x={x}
-                                        y={y}
-                                        width={cellSize}
-                                        height={cellSize}
-                                        rx={cornerRadius}
-                                        ry={cornerRadius}
-                                        fill={getCellColor(date)}
-                                    />
-                                );
-                            })
-                        )}
-                    </Svg>
-                </View>
+                <ScrollView
+                    horizontal
+                    ref={scrollRef}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.monthsScroll}
+                    onContentSizeChange={() => {
+                        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 0);
+                    }}
+                >
+                    {months.map((month) => {
+                        const svgWidth = month.weeks.length * (cellSize + cellPadding);
+
+                        return (
+                            <View key={month.key} style={styles.monthContainer}>
+                                <Text style={[styles.monthLabelInline, { color: labelColor }]}>
+                                    {month.label}
+                                </Text>
+
+                                <View>
+                                    <Svg width={svgWidth} height={svgHeight}>
+                                        {month.weeks.map((week, col) =>
+                                            week.map((date, row) => {
+                                                const x = col * (cellSize + cellPadding);
+                                                const y = row * (cellSize + cellPadding);
+                                                return (
+                                                    <Rect
+                                                        key={
+                                                            date
+                                                                ? date.toISOString()
+                                                                : `empty-${col}-${row}`
+                                                        }
+                                                        x={x}
+                                                        y={y}
+                                                        width={cellSize}
+                                                        height={cellSize}
+                                                        rx={cornerRadius}
+                                                        ry={cornerRadius}
+                                                        fill={
+                                                            date
+                                                                ? getCellColor(date)
+                                                                : themeBackgroundColor
+                                                        }
+                                                    />
+                                                );
+                                            })
+                                        )}
+                                    </Svg>
+                                </View>
+                            </View>
+                        );
+                    })}
+                </ScrollView>
             </View>
         </View>
     );
@@ -187,5 +232,21 @@ const styles = StyleSheet.create({
     monthLabel: {
         fontSize: 10,
         color: "#666",
+    },
+    monthsRow: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+    },
+    monthContainer: {
+        marginRight: 10,
+        alignItems: "flex-start",
+    },
+    monthLabelInline: {
+        fontSize: 10,
+        marginBottom: 4,
+        marginLeft: 2,
+    },
+    monthsScroll: {
+        alignItems: "flex-start",
     },
 });

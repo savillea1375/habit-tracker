@@ -86,13 +86,19 @@ export default function TaskItem({
 
     const themeBackgroundColor = useColorScheme() === "dark" ? "#000" : "#fff";
     const themeFontColor = useColorScheme() === "dark" ? "#fff" : "000";
+    const themeBorderColor = useColorScheme() === "dark" ? "#333" : "#ddd";
 
     const todayString = new Date().toISOString().split("T")[0];
 
     const router = useRouter();
 
     return (
-        <View style={[styles.mainContainer, { backgroundColor: themeBackgroundColor }]}>
+        <View
+            style={[
+                styles.mainContainer,
+                { backgroundColor: themeBackgroundColor, borderColor: themeBorderColor },
+            ]}
+        >
             <TouchableWithoutFeedback
                 onPress={() =>
                     router.push({
@@ -131,8 +137,6 @@ const styles = StyleSheet.create({
     mainContainer: {
         borderRadius: 12,
         padding: 14,
-        marginBottom: 12,
-        borderColor: "#333",
         borderWidth: 1,
     },
     taskText: {

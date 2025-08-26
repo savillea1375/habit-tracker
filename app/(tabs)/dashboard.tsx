@@ -107,7 +107,7 @@ const Home = () => {
                 data={tasks}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <TaskItem item={item} onDelete={deleteTask} />}
-                contentContainerStyle={{ paddingBottom: 80 }}
+                contentContainerStyle={{ paddingBottom: 80, gap: 12 }}
                 showsVerticalScrollIndicator={false}
             />
             <NewTaskModel

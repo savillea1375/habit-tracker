@@ -1,3 +1,4 @@
+import CompletionEntry from "@/components/CompletionEntry";
 import { Colors } from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import { Task as TaskType } from "@/types";
@@ -50,7 +51,7 @@ export default function Task() {
 
         fetchTask();
         fetchCompletions();
-    });
+    }, [id]);
 
     const themeTextColor = colorScheme === "dark" ? Colors.dark.text : Colors.light.text;
 
@@ -71,16 +72,13 @@ export default function Task() {
                 data={completions}
                 keyExtractor={(item) => String(item.id ?? item.completed_date)}
                 renderItem={({ item }) => {
-                    let formatted = item?.completed_date;
-                    return (
-                        <View>
-                            <Text style={{ color: themeTextColor }}>{formatted}</Text>
-                        </View>
-                    );
+                    return <CompletionEntry completion={item} />;
                 }}
                 ListEmptyComponent={
                     <Text style={{ color: themeTextColor }}>No completions yet.</Text>
                 }
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
             />
         </View>
     );
