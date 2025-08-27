@@ -21,13 +21,6 @@ const cornerRadius = 2;
 
 const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
 
-// Returns start and end date of the past six months
-const getPastSixMonthsRange = () => {
-    const endDate = startOfToday();
-    const startDate = startOfMonth(subMonths(endDate, 5));
-    return { startDate, endDate };
-};
-
 interface GridViewProps {
     habitId: string;
     createdAt: string;
@@ -36,14 +29,21 @@ interface GridViewProps {
     todayCompleted: boolean;
 }
 
-export default function GridView({ habitId, createdAt, refreshTrigger }: GridViewProps) {
+export default function GridView({
+    habitId,
+    createdAt,
+    refreshTrigger,
+    today,
+    todayCompleted,
+}: GridViewProps) {
     const colorScheme = useColorScheme();
     const [completions, setCompletions] = useState<Set<string>>(new Set());
     const scrollRef = useRef<ScrollView | null>(null);
 
     const svgHeight = numRows * (cellSize + cellPadding);
 
-    const { startDate: overallStart, endDate: overallEnd } = getPastSixMonthsRange();
+    const overallEnd = startOfToday();
+    const overallStart = startOfMonth(subMonths(overallEnd, 5));
 
     const months: {
         key: string;

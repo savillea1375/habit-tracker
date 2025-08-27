@@ -2,6 +2,7 @@ import CompletionEntry from "@/components/CompletionEntry";
 import { Colors } from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import { Task as TaskType } from "@/types";
+import { format, parseISO } from "date-fns";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, useColorScheme, View } from "react-native";
@@ -13,12 +14,11 @@ export default function Task() {
     const [task, setTask] = useState<TaskType | null>(null);
     const [completions, setCompletions] = useState<any[]>();
     const [loading, setLoading] = useState(false);
-    const [isChecked, setIsChecked] = useState(false);
 
     const colorScheme = useColorScheme();
     const backgroundTheme =
         colorScheme === "dark" ? Colors.dark.background : Colors.light.background;
-    const textTheme = colorScheme === "dark" ? Colors.dark.text : Colors.light.text;
+    const themeTextColor = colorScheme === "dark" ? Colors.dark.text : Colors.light.text;
 
     useEffect(() => {
         if (!id) return;
@@ -53,7 +53,9 @@ export default function Task() {
         fetchCompletions();
     }, [id]);
 
-    const themeTextColor = colorScheme === "dark" ? Colors.dark.text : Colors.light.text;
+    const createdAtString = task?.created_at
+        ? format(parseISO(task.created_at), "MMMM d, yyyy")
+        : undefined;
 
     return (
         <View
@@ -67,7 +69,7 @@ export default function Task() {
             <View style={styles.headerContainer}>
                 <Text style={[styles.header, { color: themeTextColor }]}>{name}</Text>
             </View>
-            <Text style={{ color: textTheme }}>Completed: {completions?.length}</Text>
+            <Text style={[styles.listHeader, { color: themeTextColor }]}>Completion List</Text>
             <FlatList
                 data={completions}
                 keyExtractor={(item) => String(item.id ?? item.completed_date)}
@@ -109,5 +111,9 @@ const styles = StyleSheet.create({
     checkbox: {
         margin: 8,
         padding: 12,
+    },
+    listHeader: {
+        fontSize: 28,
+        marginBottom: 12,
     },
 });
