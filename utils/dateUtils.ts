@@ -1,0 +1,29 @@
+import { format, parseISO } from "date-fns";
+import { GraphPoint } from "react-native-graph";
+
+/** Group completions together by day (for line graph) */
+export function groupCompletionsByDay(completions: any[]): GraphPoint[] {
+    const dateMap: Record<string, number> = {};
+
+    // Fill date map with completions
+    completions.forEach((c) => {
+        const dateStr = format(parseISO(c.completed_date), "yyyy-MM-dd");
+        dateMap[dateStr] = (dateMap[dateStr] || 0) + 1;
+    });
+
+    return Object.entries(dateMap)
+        .map(([dateStr, value]) => ({
+            date: parseISO(dateStr),
+            value
+        }))
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
+/** Calculate missed vs completed for a habit (for pie chart) */
+export function calculateHabitStats(habit: any, completions: any[]) {
+    const daysSinceStart = Math.floor(new Date().getTime() - new Date(habit.created_at).getTime() / (1000 * 60 * 60 * 24));
+    const completed = completions.length;
+    const missed = Math.max(daysSinceStart - completed, 0);
+
+    return {completed, missed};
+}

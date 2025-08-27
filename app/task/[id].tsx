@@ -1,12 +1,13 @@
 import CompletionEntry from "@/components/CompletionEntry";
-import { Colors } from "@/constants/Colors";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { supabase } from "@/lib/supabase";
 import { Task as TaskType } from "@/types";
 import { format, parseISO } from "date-fns";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, useColorScheme, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Task() {
     const { id, name } = useLocalSearchParams();
@@ -15,10 +16,8 @@ export default function Task() {
     const [completions, setCompletions] = useState<any[]>();
     const [loading, setLoading] = useState(false);
 
-    const colorScheme = useColorScheme();
-    const backgroundTheme =
-        colorScheme === "dark" ? Colors.dark.background : Colors.light.background;
-    const themeTextColor = colorScheme === "dark" ? Colors.dark.text : Colors.light.text;
+    const backgroundTheme = useThemeColor({}, "background");
+    const themeTextColor = useThemeColor({}, "text");
 
     useEffect(() => {
         if (!id) return;
@@ -58,7 +57,7 @@ export default function Task() {
         : undefined;
 
     return (
-        <View
+        <SafeAreaView
             style={[
                 styles.mainContainer,
                 {
@@ -82,14 +81,13 @@ export default function Task() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ gap: 8 }}
             />
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
-        paddingTop: 100,
         paddingHorizontal: 12,
     },
     header: {
