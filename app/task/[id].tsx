@@ -1,8 +1,8 @@
 import CompletionEntry from "@/components/CompletionEntry";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { eventBus } from "@/lib/eventBus";
 import { supabase } from "@/lib/supabase";
 import { Task as TaskType } from "@/types";
-import { format, parseISO } from "date-fns";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -34,6 +34,10 @@ export default function Task() {
             setLoading(false);
         };
 
+        fetchTask();
+    }, [id]);
+
+    useEffect(() => {
         const fetchCompletions = async () => {
             const { data, error } = await supabase
                 .from("habit_completions")
@@ -48,13 +52,16 @@ export default function Task() {
             }
         };
 
-        fetchTask();
         fetchCompletions();
-    }, [id]);
+    }, [completions]);
 
-    const createdAtString = task?.created_at
-        ? format(parseISO(task.created_at), "MMMM d, yyyy")
-        : undefined;
+    const handleDelete = (completion: any) => {
+        eventBus.emit("completionsChanged", {
+            habitId: id,
+            date: completion.completed_date,
+            present: false,
+        });
+    };
 
     return (
         <SafeAreaView
@@ -73,7 +80,7 @@ export default function Task() {
                 data={completions}
                 keyExtractor={(item) => String(item.id ?? item.completed_date)}
                 renderItem={({ item }) => {
-                    return <CompletionEntry completion={item} />;
+                    return <CompletionEntry completion={item} onDelete={handleDelete} />;
                 }}
                 ListEmptyComponent={
                     <Text style={{ color: themeTextColor }}>No completions yet.</Text>

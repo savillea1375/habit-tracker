@@ -49,6 +49,6 @@ export async function getAllHabitsWithCompletions(): Promise<any[]> {
         console.error("Error fetching all habits and their completions", error);
         return [];
     }
-
+    
     return data ?? [];
 }

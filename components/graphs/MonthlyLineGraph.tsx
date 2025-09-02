@@ -20,7 +20,7 @@ export default function MonthlyLineGraph() {
         }
 
         fetchData();
-    }, []);
+    }, [lineGraphData]);
 
     const themeBackgroundColor = useColorScheme() === "dark" ? "#000" : "#fff";
     const themeBorderColor = useColorScheme() === "dark" ? "#333" : "#ddd";

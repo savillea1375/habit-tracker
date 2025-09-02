@@ -1,3 +1,4 @@
+import CompletionPieChart from "@/components/graphs/CompletionPieChart";
 import MonthlyLineGraph from "@/components/graphs/MonthlyLineGraph";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { StyleSheet, Text } from "react-native";
@@ -11,6 +12,7 @@ export default function Stats() {
         <SafeAreaView style={[styles.mainContainer, { backgroundColor: backgroundThemeColor }]}>
             <Text style={[styles.header, { color: themeTextColor }]}>Stats</Text>
             <MonthlyLineGraph />
+            <CompletionPieChart />
         </SafeAreaView>
     );
 }

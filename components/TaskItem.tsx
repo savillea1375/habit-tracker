@@ -1,3 +1,4 @@
+import { eventBus } from "@/lib/eventBus";
 import { supabase } from "@/lib/supabase";
 import { Task } from "@/types";
 import { Text } from "@react-navigation/elements";
@@ -20,6 +21,17 @@ export default function TaskItem({
     useEffect(() => {
         checkCompletion();
     }, [item.id]);
+
+    // listen for changes inside [id]
+    useEffect(() => {
+        const off = eventBus.on("completionsChanged", (payload: any) => {
+            if (!payload || payload.habitId !== item.id) return;
+            // make GridView refetch completions
+            setRefreshTrigger((r) => r + 1);
+            // set today's checkbox
+        });
+        return off;
+    });
 
     const checkCompletion = async () => {
         const today = new Date().toISOString().split("T")[0];
@@ -56,6 +68,11 @@ export default function TaskItem({
                     setIsChecked(false);
                     console.error("handleCompletionToggle:", error);
                 } else {
+                    eventBus.emit("completionsChanged", {
+                        habitId: item.id,
+                        date: today,
+                        present: true,
+                    });
                     setRefreshTrigger((prev) => prev + 1);
                 }
             } else {
@@ -69,6 +86,11 @@ export default function TaskItem({
                     setIsChecked(false);
                     console.error("handleCompletionToggle:", error);
                 } else {
+                    eventBus.emit("completionsChanged", {
+                        habitId: item.id,
+                        date: today,
+                        present: false,
+                    });
                     setRefreshTrigger((prev) => prev + 1);
                 }
             }

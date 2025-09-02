@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subDays } from "date-fns";
 import { GraphPoint } from "react-native-graph";
 
 /** Group completions together by day (for line graph) */
@@ -11,12 +11,19 @@ export function groupCompletionsByDay(completions: any[]): GraphPoint[] {
         dateMap[dateStr] = (dateMap[dateStr] || 0) + 1;
     });
 
-    return Object.entries(dateMap)
-        .map(([dateStr, value]) => ({
-            date: parseISO(dateStr),
-            value
-        }))
-        .sort((a, b) => a.date.getTime() - b.date.getTime());
+    const today = new Date();
+    const res: GraphPoint[] = [];
+
+    for (let i = 29; i >= 0; i--) {
+        const date = subDays(today, i);
+        const dateStr = format(date, "yyyy-MM-dd");
+        res.push({
+            date,
+            value: dateMap[dateStr] || 0,
+        })
+    }
+
+    return res;
 }
 
 /** Calculate missed vs completed for a habit (for pie chart) */

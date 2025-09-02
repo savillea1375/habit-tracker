@@ -1,20 +1,32 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { format } from "date-fns";
+import { supabase } from "@/lib/supabase";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 const CONTAINER_HEIGHT = 64;
 
-export default function CompletionEntry({ completion }: { completion: any }) {
+export default function CompletionEntry({
+    completion,
+    onDelete,
+}: {
+    completion: any;
+    onDelete?: (completion: any) => void;
+}) {
     const themeFontColor = useThemeColor({}, "text");
     const themeBackgroundColor = useColorScheme() === "dark" ? "#000" : "#fff";
     const themeBorderColor = useColorScheme() === "dark" ? "#333" : "#ddd";
 
-    const formattedDate = format(completion.completed_date, "MMMM do, yyyy");
+    const formattedDate = completion.completed_date;
 
     const handleDelete = async () => {
-        return null;
+        const { error } = await supabase.from("habit_completions").delete().eq("id", completion.id);
+
+        if (error) {
+            Alert.alert("Error deleting entry", error.message);
+        } else {
+            if (onDelete) onDelete(completion);
+        }
     };
 
     const renderRightActions = () => {
