@@ -4,8 +4,3 @@ export type Task = {
     userId: string;
     created_at: string,
 };
-
-export type User = {
-    id: string,
-    email?: string,
-}

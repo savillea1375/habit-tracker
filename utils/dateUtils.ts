@@ -25,12 +25,3 @@ export function groupCompletionsByDay(completions: any[]): GraphPoint[] {
 
     return res;
 }
-
-/** Calculate missed vs completed for a habit (for pie chart) */
-export function calculateHabitStats(habit: any, completions: any[]) {
-    const daysSinceStart = Math.floor(new Date().getTime() - new Date(habit.created_at).getTime() / (1000 * 60 * 60 * 24));
-    const completed = completions.length;
-    const missed = Math.max(daysSinceStart - completed, 0);
-
-    return {completed, missed};
-}

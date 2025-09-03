@@ -1,5 +1,6 @@
 import { eventBus } from "@/lib/eventBus";
 import { supabase } from "@/lib/supabase";
+import { useUser } from "@/lib/UserContext";
 import { Task } from "@/types";
 import { Text } from "@react-navigation/elements";
 import Checkbox from "expo-checkbox";
@@ -32,6 +33,8 @@ export default function TaskItem({
     const [modalVisible, setModalVisible] = useState(false);
     const [newTaskName, setNewTaskName] = useState(item.name);
 
+    const user = useUser();
+
     useEffect(() => {
         checkCompletion();
     }, [item.id]);
@@ -55,6 +58,7 @@ export default function TaskItem({
             .select("id")
             .eq("habit_id", item.id)
             .eq("completed_date", today)
+            .eq("habit.user_id", user?.id)
             .single();
 
         if (!error && data) {

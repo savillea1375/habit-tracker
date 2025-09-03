@@ -15,7 +15,7 @@ export default function MonthlyLineGraph() {
     useEffect(() => {
         async function fetchData() {
             const completions = await getCompletionsForRange(30);
-            const grouped = groupCompletionsByDay(completions);
+            const grouped = groupCompletionsByDay(completions ?? []);
             setLineGraphData(grouped);
         }
 

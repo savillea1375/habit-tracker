@@ -1,17 +1,38 @@
 import { Colors } from "@/constants/Colors";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import React from "react";
+import { getTotalCompletionsAndMisses } from "@/lib/habits";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, useColorScheme, View } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
 
 export default function CompletionPieChart() {
+    const [data, setData] = useState({
+        totalCompletions: 0,
+        totalMissedDays: 0,
+        totalDays: 0,
+        habitCount: 0,
+    });
+
     const themeBackgroundColor = useColorScheme() === "dark" ? "#000" : "#fff";
     const themeBorderColor = useColorScheme() === "dark" ? "#333" : "#ddd";
     const themeTextColor = useThemeColor({}, "text");
 
-    const data = [
-        { value: 25, color: Colors.primary, text: "25" },
-        { value: 30, color: Colors.shared.gridFailed, text: "30" },
+    // Get pie chart
+    useEffect(() => {
+        getTotalCompletionsAndMisses().then((res) => setData(res));
+    });
+
+    const pieData = [
+        {
+            value: data.totalCompletions,
+            color: Colors.primary,
+            text: `${((data.totalCompletions / data.totalDays) * 100).toFixed(2)}%`,
+        },
+        {
+            value: data.totalMissedDays,
+            color: Colors.shared.gridFailed,
+            text: `${((data.totalMissedDays / data.totalDays) * 100).toFixed(2)}%`,
+        },
     ];
 
     return (
@@ -25,7 +46,7 @@ export default function CompletionPieChart() {
                 Completion to failure ratio:
             </Text>
             <View style={styles.pieWrapper}>
-                <PieChart showText textColor="black" data={data} />
+                <PieChart showText textColor="black" data={pieData} />
             </View>
         </View>
     );

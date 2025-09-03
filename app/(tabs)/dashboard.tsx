@@ -1,9 +1,9 @@
 import NewTaskModel from "@/components/NewTaskModal";
 import TaskItem from "@/components/TaskItem";
 import { Colors } from "@/constants/Colors";
-import { getUser } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { Task, User } from "@/types";
+import { useUser } from "@/lib/UserContext";
+import { Task } from "@/types";
 import { Text } from "@react-navigation/elements";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
@@ -22,7 +22,7 @@ const Home = () => {
     const hideModal = () => setVisible(false);
 
     const [tasks, setTasks] = useState<Task[]>();
-    const [user, setUser] = useState<User | null>(null);
+    const user = useUser();
 
     // Add a task
     const addTask = async () => {
@@ -58,19 +58,6 @@ const Home = () => {
     const deleteTask = (id: string) => {
         setTasks((prev) => prev?.filter((task) => task.id !== id));
     };
-
-    // Get the current user info
-    useEffect(() => {
-        const fetchUser = async () => {
-            const u = await getUser();
-
-            if (u) {
-                setUser(u);
-            }
-        };
-
-        fetchUser();
-    }, []);
 
     // Get users tasks
     useEffect(() => {
