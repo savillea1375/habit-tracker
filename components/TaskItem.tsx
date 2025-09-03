@@ -5,7 +5,16 @@ import { Text } from "@react-navigation/elements";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, TouchableWithoutFeedback, useColorScheme, View } from "react-native";
+import {
+    Alert,
+    Modal,
+    Pressable,
+    StyleSheet,
+    TouchableWithoutFeedback,
+    useColorScheme,
+    View,
+} from "react-native";
+import EditTaskModal from "./EditTaskModal";
 import GridView from "./GridView";
 
 export default function TaskItem({
@@ -17,6 +26,11 @@ export default function TaskItem({
 }) {
     const [isChecked, setIsChecked] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [menuVisible, setMenuVisible] = useState(false);
+
+    // Edit modal state
+    const [modalVisible, setModalVisible] = useState(false);
+    const [newTaskName, setNewTaskName] = useState(item.name);
 
     useEffect(() => {
         checkCompletion();
@@ -100,12 +114,6 @@ export default function TaskItem({
         }
     };
 
-    const handleDelete = async () => {
-        const { error } = await supabase.from("habits").delete().eq("id", item.id);
-
-        if (!error) onDelete(item.id);
-    };
-
     const themeBackgroundColor = useColorScheme() === "dark" ? "#000" : "#fff";
     const themeFontColor = useColorScheme() === "dark" ? "#fff" : "000";
     const themeBorderColor = useColorScheme() === "dark" ? "#333" : "#ddd";
@@ -113,6 +121,27 @@ export default function TaskItem({
     const todayString = new Date().toISOString().split("T")[0];
 
     const router = useRouter();
+
+    const handleDelete = async () => {
+        setMenuVisible(false);
+
+        const { error } = await supabase.from("habits").delete().eq("id", item.id);
+
+        if (!error) onDelete(item.id);
+    };
+
+    const handleEdit = async () => {
+        const { error } = await supabase
+            .from("habits")
+            .update({ name: newTaskName })
+            .eq("id", item.id);
+
+        setModalVisible(false);
+
+        if (error) {
+            Alert.alert("Error changing task name");
+        }
+    };
 
     return (
         <View
@@ -128,7 +157,7 @@ export default function TaskItem({
                         params: { id: item.id, name: item.name },
                     })
                 }
-                onLongPress={() => console.log("show menu")}
+                onLongPress={() => setMenuVisible(!menuVisible)}
                 style={[styles.mainContainer, { backgroundColor: "#fff" }]}
             >
                 <View>
@@ -151,6 +180,42 @@ export default function TaskItem({
                     />
                 </View>
             </TouchableWithoutFeedback>
+
+            <Modal
+                visible={menuVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setMenuVisible(false)}
+            >
+                <Pressable style={styles.modalOverlay} onPress={() => setMenuVisible(false)}>
+                    <View style={styles.modalBox}>
+                        <Text style={styles.modalTitle}>{item.name}</Text>
+                        <Pressable
+                            style={styles.modalBtn}
+                            onPress={() => {
+                                setNewTaskName(item.name);
+                                setMenuVisible(false);
+                                setModalVisible(true);
+                            }}
+                        >
+                            <Text style={styles.modalBtnText}>Edit</Text>
+                        </Pressable>
+                        <Pressable style={styles.modalBtn} onPress={handleDelete}>
+                            <Text style={[styles.modalBtnText, { color: "#ef4444" }]}>Delete</Text>
+                        </Pressable>
+                        <Pressable style={styles.modalCancel} onPress={() => setMenuVisible(false)}>
+                            <Text style={styles.modalCancelText}>Cancel</Text>
+                        </Pressable>
+                    </View>
+                </Pressable>
+            </Modal>
+            <EditTaskModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                value={newTaskName}
+                onChangeText={setNewTaskName}
+                onSubmit={handleEdit}
+            />
         </View>
     );
 }
@@ -172,5 +237,44 @@ const styles = StyleSheet.create({
     },
     checkbox: {
         padding: 12,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.25)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    modalBox: {
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: 24,
+        minWidth: 220,
+        alignItems: "center",
+        elevation: 8,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "700",
+        marginBottom: 18,
+    },
+    modalBtn: {
+        paddingVertical: 10,
+        width: "100%",
+        alignItems: "center",
+    },
+    modalBtnText: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#222",
+    },
+    modalCancel: {
+        marginTop: 8,
+        paddingVertical: 8,
+        width: "100%",
+        alignItems: "center",
+    },
+    modalCancelText: {
+        fontSize: 15,
+        color: "#888",
     },
 });

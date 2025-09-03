@@ -35,7 +35,7 @@ export default function MonthlyLineGraph() {
         >
             <Text style={[styles.header, { color: themeTextColor }]}>Completions by day:</Text>
             <Text style={[styles.label, { color: themeTextColor }]}>
-                {date ? date.toLocaleDateString() : ""}:{label}
+                {date ? `${date.toLocaleDateString()}: ${label ?? ""}` : ""}
             </Text>
             <LineGraph
                 points={lineGraphData}
